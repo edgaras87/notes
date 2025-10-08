@@ -301,3 +301,76 @@ public class Demo {
 * **Don’t over-stream**: A plain `for` loop is fine for very simple, stateful, or performance-critical mutations.
 
 ---
+
+```java
+
+
+
+
+```
+
+# 🔑 Wildcards in Stream API
+
+## `? super T` → **Consumer**
+
+Use when the API **feeds stream elements into something**.
+
+* **`forEach(Consumer<? super T>)`**
+
+  ```java
+  Stream<Integer> s = Stream.of(1,2,3);
+  Consumer<Number> print = n -> System.out.println(n);
+  s.forEach(print); // OK because Consumer<? super Integer>
+  ```
+
+* **`allMatch(Predicate<? super T>)`**
+
+  ```java
+  Stream<String> words = Stream.of("a", "bb");
+  Predicate<Object> notNull = Objects::nonNull; // Predicate<Object> is super of String
+  boolean all = words.allMatch(notNull);
+  ```
+
+* **`sorted(Comparator<? super T>)`**
+
+  ```java
+  Stream<String> s = Stream.of("c","a","b");
+  Comparator<Object> cmp = (o1,o2) -> o1.toString().compareTo(o2.toString());
+  s.sorted(cmp).forEach(System.out::println);
+  ```
+
+---
+
+## `? extends R` → **Producer**
+
+Use when the API **returns new elements produced from the stream**.
+
+* **`map(Function<? super T, ? extends R>)`**
+
+  ```java
+  Stream<Integer> s = Stream.of(1,2,3);
+  Function<Number, String> f = n -> "Num:" + n;
+  Stream<String> out = s.map(f); // R is String
+  ```
+
+* **`flatMap(Function<? super T, ? extends Stream<? extends R>>)`**
+
+  ```java
+  Stream<String> s = Stream.of("a,b","c");
+  Stream<String> flat = s.flatMap(str -> Arrays.stream(str.split(",")));
+  ```
+
+---
+
+# 📌 Rule of Thumb (PECS)
+
+* **Producer → Extends**: output side (`map`, `flatMap`)
+* **Consumer → Super**: input side (`forEach`, `allMatch`, `sorted`)
+
+---
+
+👉 That’s really all you need:
+
+* If the stream **gives elements to** your function = `? super T`.
+* If your function **produces new elements** = `? extends R`.
+
